@@ -1,13 +1,6 @@
-import cv2
-import os
+from ml.person_detector import PersonDetector
 
-MODEL_DIR = "backend/ml/models"
 
-prototxt = os.path.join(MODEL_DIR, "MobileNetSSD_deploy.prototxt")
-weights = os.path.join(MODEL_DIR, "MobileNetSSD_deploy.caffemodel")
-
-print("Prototxt exists:", os.path.exists(prototxt))
-print("Caffemodel exists:", os.path.exists(weights))
-
-net = cv2.dnn.readNetFromCaffe(prototxt, weights)
-print("✅ MobileNet-SSD loaded successfully")
+def test_model_load():
+    detector = PersonDetector()
+    assert detector.net is not None
