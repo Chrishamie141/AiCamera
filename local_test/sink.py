@@ -20,8 +20,6 @@ class LocalEvent:
     metadata: dict[str, Any]
 
 
-
-
 def _to_jsonable(value):
     if isinstance(value, dict):
         return {str(k): _to_jsonable(v) for k, v in value.items()}
