@@ -20,6 +20,21 @@ class LocalEvent:
     metadata: dict[str, Any]
 
 
+def _to_jsonable(value):
+    if isinstance(value, dict):
+        return {str(k): _to_jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_jsonable(v) for v in value]
+    if hasattr(value, "item") and callable(value.item):
+        try:
+            return value.item()
+        except Exception:
+            pass
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
 class LocalEventSink:
     def __init__(self, output_dir: Path):
         self.output_dir = output_dir
@@ -50,7 +65,7 @@ class LocalEventSink:
 
     def create_pending_event(self, event: LocalEvent) -> int:
         payload = asdict(event)
-        metadata_json = json.dumps(payload.pop("metadata", {}))
+        metadata_json = json.dumps(_to_jsonable(payload.pop("metadata", {})))
         cursor = self.conn.execute(
             """
             INSERT INTO events(timestamp, event_type, detection_type, confidence, status, snapshot_path, clip_path, metadata_json, created_at)
