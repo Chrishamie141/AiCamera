@@ -3,3 +3,5 @@ picamera2
 opencv-python
 numpy
 python-dotenv
+qrcode[pil]
+pyzbar
