@@ -54,6 +54,8 @@ class LocalTestRunner:
     def run(self):
         started = time.time()
         try:
+            if self.config.preview:
+                cv2.namedWindow("Local Test Preview", cv2.WINDOW_NORMAL)
             while True:
                 ok, frame, frame_info = self.source.read()
                 if not ok or frame is None:
@@ -69,6 +71,8 @@ class LocalTestRunner:
 
                 if self.config.preview:
                     cv2.imshow("Local Test Preview", annotated)
+                    if cv2.getWindowProperty("Local Test Preview", cv2.WND_PROP_VISIBLE) < 1:
+                        break
                     key = cv2.waitKey(1) & 0xFF
                     if key in (ord("q"), 27):
                         break
@@ -77,6 +81,8 @@ class LocalTestRunner:
                     break
                 if self.config.run_seconds and time.time() - started >= self.config.run_seconds:
                     break
+        except KeyboardInterrupt:
+            pass
         finally:
             self._print_summary()
             self._shutdown()

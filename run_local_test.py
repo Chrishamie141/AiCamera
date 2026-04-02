@@ -71,7 +71,10 @@ def main():
     )
 
     runner = LocalTestRunner(config)
-    runner.run()
+    try:
+        runner.run()
+    except KeyboardInterrupt:
+        print("\nLocal test interrupted by user.")
 
 
 if __name__ == "__main__":
