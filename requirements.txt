@@ -1,5 +1,5 @@
 flask
-picamera2
+picamera2; platform_system == "Linux"
 opencv-python
 numpy
 python-dotenv

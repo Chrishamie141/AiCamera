@@ -4,3 +4,8 @@ __pycache__/
 .env
 snapshots/
 events/
+
+.venv/
+frontend/node_modules/
+frontend/dist/
+local_test_output/
