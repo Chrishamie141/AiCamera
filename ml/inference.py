@@ -5,6 +5,7 @@ import cv2
 
 from ml.face_detector import FaceDetector
 from ml.person_detector import PersonDetector
+from ml.recognizer import FaceRecognizer
 
 try:
     from pyzbar.pyzbar import decode as qr_decode
@@ -29,23 +30,34 @@ class InferenceEngine:
         self.last_inference = 0.0
         self.person_detector = PersonDetector(confidence_threshold=settings.person_confidence)
         self.face_detector = FaceDetector()
+        self.recognizer = FaceRecognizer() # Initialize the new recognizer
 
     def process(self, frame):
         motion, motion_area = self._motion(frame)
         person_boxes = []
         face_boxes = []
         qr_tokens = []
+        recognized_names = []
 
         if qr_decode is not None:
             qr_tokens = [obj.data.decode("utf-8") for obj in qr_decode(frame)]
 
         now = time.time()
         should_run = (not self.settings.motion_enabled or motion) and (now - self.last_inference > self.settings.cooldown_sec)
+        
         if should_run:
             if self.settings.person_enabled:
                 person_boxes = self.person_detector.detect(frame)
+            
             if self.settings.face_enabled:
                 face_boxes = self.face_detector.detect(frame)
+                
+                # --- NEW RECOGNITION LOGIC ---
+                for box in face_boxes:
+                    name = self.recognizer.recognize(frame, box)
+                    if name != "Unknown":
+                        recognized_names.append(name)
+            
             self.last_inference = now
 
         return {
@@ -56,6 +68,7 @@ class InferenceEngine:
             "person_detected": len(person_boxes) > 0,
             "face_detected": len(face_boxes) > 0,
             "qr_tokens": qr_tokens,
+            "recognized_names": recognized_names, # Output the identities
         }
 
     def _motion(self, frame):

@@ -15,7 +15,24 @@ def iso_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# ✅ NEW: helper to convert numpy types to native Python
+def make_json_safe(obj):
+    if isinstance(obj, dict):
+        return {k: make_json_safe(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [make_json_safe(v) for v in obj]
+    elif hasattr(obj, "item"):  # handles numpy types like int64, float32
+        try:
+            return obj.item()
+        except Exception:
+            return str(obj)
+    else:
+        return obj
+
+
 def create_event(event: dict[str, Any]) -> int:
+    safe_metadata = make_json_safe(event.get("metadata", {}))
+
     with get_connection() as conn:
         cursor = conn.execute(
             """
@@ -29,7 +46,7 @@ def create_event(event: dict[str, Any]) -> int:
                 event["confidence"],
                 event.get("snapshot_path"),
                 event.get("clip_path"),
-                json.dumps(event.get("metadata", {})),
+                json.dumps(safe_metadata),  # ✅ FIXED
             ),
         )
         conn.commit()
